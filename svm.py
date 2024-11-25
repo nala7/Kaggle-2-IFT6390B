@@ -1,12 +1,13 @@
 import numpy as np
 
 class MySVM:
-    def __init__(self, learning_rate=0.0001, lambda_param=0.01, n_iters=1000):
+    def __init__(self, learning_rate=0.001, lambda_param=0.01, n_iters=1000):
         self.lr = learning_rate
         self.lambda_param = lambda_param
         self.n_iters = n_iters
         self.weights = {}  # Dictionary to store weights for each class
         self.biases = {}   # Dictionary to store biases for each class
+        self.classes = []
 
     def fit(self, X, y):
         self.classes = np.unique(y)
