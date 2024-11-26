@@ -32,7 +32,26 @@ for label in unique_labels:
 
 
 # Dataset Preparation (assuming train_data is a dictionary with 'images' and 'labels')
+# CustomDataset should accept a `transform` parameter for augmentation
 class CustomDataset(Dataset):
+    def __init__(self, images, labels=None, transform=None):
+        self.images = images
+        self.labels = labels
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        image = self.images[idx]
+        if self.transform:
+            image = self.transform(image)
+
+        if self.labels is not None:
+            label = self.labels[idx]
+            return image, label
+        return image
+class CustomDatasetOLD(Dataset):
     def __init__(self, images, labels):
         self.images = torch.tensor(np.array(images)).float().unsqueeze(1) / 255.0  # Normalize to [0, 1] and add channel dim
         self.labels = torch.tensor(labels).long()
@@ -44,9 +63,24 @@ class CustomDataset(Dataset):
         return self.images[idx], self.labels[idx]
 
 
-# Creating PyTorch Dataset
-dataset = CustomDataset(train_data['images'], train_data['labels'])
+import torchvision.transforms as transforms
 
+# Define data augmentation transformations
+train_transforms = transforms.Compose([
+    transforms.RandomRotation(degrees=20),  # Random rotation by ±20 degrees
+    transforms.RandomHorizontalFlip(),      # Random horizontal flip
+    transforms.ToTensor(),                  # Convert to Tensor
+    transforms.Normalize((0.5,), (0.5,))    # Normalize to [-1, 1] range
+])
+
+test_transforms = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))
+])
+
+
+# Creating PyTorch Dataset
+dataset = CustomDataset(train_data['images'], train_data['labels'], transform=train_transforms)
 
 # Extract images and labels
 images = train_data['images']
@@ -251,9 +285,10 @@ def train_and_evaluate_with_checkpoint(model, train_loader, val_loader, criterio
     }
 
 # Training
-checkpoint_path = 'checkpoint.pth'
+checkpoint_path = 'checkpoint-torchcnn.pth'
+best_path = 'best_model-torchcnn.pth'
 epochs = 1000
-results = train_and_evaluate_with_checkpoint(model, train_loader, val_loader, criterion, optimizer, epochs, checkpoint_path)
+results = train_and_evaluate_with_checkpoint(model, train_loader, val_loader, criterion, optimizer, epochs, checkpoint_path,best_path=best_path,writer=writer,device=device)
 # Close TensorBoard writer
 writer.close()
 
@@ -311,7 +346,7 @@ def load_model(model, checkpoint_path='best_model.pth'):
 
 # Assuming `SimpleCNN` is the model class and test_data is already loaded
 model = SimpleCNN(num_classes=4).to(device)
-model = load_model(model, 'best_model.pth')  # Load the best saved model
+model = load_model(model, best_path)  # Load the best saved model
 
 # Convert test images to a PyTorch Tensor and normalize
 test_images = torch.tensor(np.array(test_data['images'])).float().unsqueeze(1) / 255.0  # Add channel dim
@@ -334,7 +369,7 @@ ids = np.arange(1, len(predictions) + 1)  # IDs starting from 1
 output_df = pd.DataFrame({'ID': ids, 'Class': predictions})
 
 # Save the DataFrame to a CSV file
-output_csv_path = 'test_predictions.csv'
+output_csv_path = 'test_predictions_torchcnn.csv'
 output_df.to_csv(output_csv_path, index=False)
 
 print(f"Predictions saved to {output_csv_path}")
