@@ -9,6 +9,8 @@ __pycache__/
 data/
 runs/
 
+*stage*.pth
+
 # Distribution / packaging
 .Python
 build/
