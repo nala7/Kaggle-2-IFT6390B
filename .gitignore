@@ -10,6 +10,7 @@ data/
 runs/
 
 *stage*.pth
+*.pth
 
 # Distribution / packaging
 .Python
