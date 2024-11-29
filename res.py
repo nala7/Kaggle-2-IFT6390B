@@ -104,6 +104,7 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 # Model definition
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f"Using {device} device")
 model = models.resnet18(pretrained=True)
 model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
 model.fc = nn.Linear(model.fc.in_features, len(unique_labels))
@@ -161,8 +162,11 @@ def train_and_validate(model, train_loader, val_loader, criterion, optimizer, ep
     all_train_predictions = []
     all_val_predictions = []
 
+
     # load best model and its accuracy
     if os.path.exists(best_model_path):
+        val_labels = []
+        val_preds = []
         model.load_state_dict(torch.load(best_model_path))
         model.eval()
         with torch.no_grad():
@@ -170,12 +174,11 @@ def train_and_validate(model, train_loader, val_loader, criterion, optimizer, ep
                 images, labels = images.to(device), labels.to(device)
                 outputs = model(images)
                 _, predicted = torch.max(outputs, 1)
-                val_correct += (predicted == labels).sum().item()
-                val_total += labels.size(0)
                 val_labels.extend(labels.cpu().numpy())
                 val_preds.extend(predicted.cpu().numpy())
-        print(f"Best model loaded from {best_model_path} with Val Accuracy: {val_accuracy:.4f}")
         best_score = balanced_accuracy_score(val_labels, val_preds)
+        print(f"Best model loaded from {best_model_path} with best score: {best_score:.4f}")
+
     else:
         best_score = 0.0
     for epoch in range(start_epoch, epochs):
