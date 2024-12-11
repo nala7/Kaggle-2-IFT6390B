@@ -119,6 +119,7 @@ def load_checkpoint(model, optimizer, checkpoint_path):
     print("No checkpoint found. Starting from scratch.")
     return model, optimizer, 0
 
+import time
 # Training and validation function
 def train_and_validate(
     model,
@@ -253,7 +254,7 @@ def train_and_validate(
         }
         torch.save(checkpoint, checkpoint_path)
         print(f"Checkpoint saved to {checkpoint_path}")
-
+        time.sleep(300) # Sleep for 5 minutes to let the GPU cool down
 
 train_and_validate(
     model=model,
@@ -261,7 +262,7 @@ train_and_validate(
     val_loader=val_loader,
     criterion=criterion,
     optimizer=optimizer,
-    epochs=20,
+    epochs=100,
     checkpoint_path=checkpoint_path,
     best_model_path=best_model_path,
     writer=writer,
