@@ -1,0 +1,20 @@
+stateDiagram-v2
+    Stage1:Healthy vs Non-Healthy Binary Classification
+    [*] --> Stage1 : Input Images
+
+    Stage1 --> Healthy : Healthy Prediction (Class 3)
+    Healthy --> [*]
+
+    Stage2: Choroidal Neovascularization vs Others Binary Classification
+    Stage1 --> Stage2 : Non-Healthy Images
+
+    Stage2 --> CNV : Choroidal Neovascularization    (Class 0)
+    CNV --> [*]
+
+    Stage3: Diabetic Macular Edema vs Drusen Binary Classification
+    Stage2 --> Stage3 : Other Non-Healthy Images
+    Stage3 --> DME : Diabetic Macular Edema (Class 1)
+    Stage3 --> Drusen : Drusen (Class 2)
+    
+    DME --> [*]
+    Drusen --> [*]

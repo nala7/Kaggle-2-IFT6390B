@@ -1,0 +1,9 @@
+public	label
+0.76938	Weighted Voting
+0.77534	Pretrained ResNet-18 (+Modifications)
+0.78528	Pretrained EfficientNet-B0
+0.48707	Hierarchical Multi-Stage ResNet-18 Pipeline
+0.68986	Pretrained ResNet-18
+0.61431	Simple CNN in pytorch
+0.39562	CNN from Scratch
+0.34194	SVM from Scratch
