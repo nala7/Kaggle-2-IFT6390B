@@ -1,6 +1,5 @@
 import numpy as np
 
-# Define the CNN as implemented previously
 class SimpleCNN:
     def __init__(self, input_shape, num_classes, lr=0.01, epochs=50, batch_size=32):
         self.input_shape = input_shape

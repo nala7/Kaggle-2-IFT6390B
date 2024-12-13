@@ -1,8 +1,11 @@
+import csv
 import numpy as np
 import pickle
-import csv
-from svm2 import MulticlassSVM
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 from cnn import SimpleCNN
+from svm2 import MulticlassSVM
 
 
 def pca(X, n_components):
@@ -133,28 +136,52 @@ def callCNN(X_train, y_train, X_test):
     # Save predictions
     save('cnn_submission.csv', y_test_pred)
 
-# # Load data
-# print("Loading data...")
-# with open('train_data.pkl', 'rb') as f:
-#     train_data = pickle.load(f)
-# with open('test_data.pkl', 'rb') as f:
-#     test_data = pickle.load(f)
-#
-# # Prepare data
-# print("Preparing data...")
-# X_train = np.array(train_data['images']).reshape(len(train_data['images']), -1)
-# y_train = np.array(train_data['labels'])
-# X_test = np.array(test_data['images']).reshape(len(test_data['images']), -1)
-#
-# # Process data
-# sample_size = int(0.4 * len(X_train))
-# X_train, y_train, X_test = process_data(
-#     X_train, y_train, X_test,
-#     sample_size=sample_size
-# )
-#
-# callCNN(X_train, y_train, X_test)
+def analyze_epochs(X_train, y_train, X_val, y_val, epoch_range=range(1, 16)):
+    train_accuracies = []
+    val_accuracies = []
 
+    for epochs in epoch_range:
+        print(f"Training with {epochs} epochs...")
+
+        # Create and train model
+        cnn = SimpleCNN(input_shape=(28, 28), num_classes=4,
+                        lr=0.01, epochs=epochs, batch_size=32)
+        cnn.fit(X_train, y_train)
+
+        # Compute accuracies
+        train_acc = cnn.score(X_train, y_train)
+        val_acc = cnn.score(X_val, y_val)
+
+        train_accuracies.append(train_acc)
+        val_accuracies.append(val_acc)
+
+    return train_accuracies, val_accuracies
+
+
+def plot_epoch_performance(train_accuracies, val_accuracies, epoch_range = range(10, 13)):
+    # Plot Accuracy
+    plt.figure(figsize=(10, 6))
+    plt.plot(epoch_range, train_accuracies, marker='o', label='Training Accuracy')
+    plt.plot(epoch_range, val_accuracies, marker='o', label='Validation Accuracy')
+    plt.title('Accuracy vs. Number of Epochs')
+    plt.xlabel('Number of Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+    # # Plot Loss
+    # plt.figure(figsize=(10, 6))
+    # plt.plot(epoch_range, train_losses, marker='o', label='Training Loss')
+    # plt.plot(epoch_range, val_losses, marker='o', label='Validation Loss')
+    # plt.title('Loss vs. Number of Epochs')
+    # plt.xlabel('Number of Epochs')
+    # plt.ylabel('Loss')
+    # plt.legend()
+    # plt.grid(True)
+    # plt.tight_layout()
+    # plt.show()
 
 # Load data
 print("Loading data...")
@@ -163,10 +190,21 @@ with open('train_data.pkl', 'rb') as f:
 with open('test_data.pkl', 'rb') as f:
     test_data = pickle.load(f)
 
-# Prepare data
-print("Preparing data...")
-X_train = np.array(train_data['images']).reshape(len(train_data['images']), 28, 28)  # Reshape to 28x28
-y_train = np.array(train_data['labels'])
-X_test = np.array(test_data['images']).reshape(len(test_data['images']), 28, 28)  # Reshape to 28x28
+    # Prepare data
+    print("Preparing data...")
+    X = np.array(train_data['images']).reshape(len(train_data['images']), 28, 28)
+    y = np.array(train_data['labels'])
 
-callCNN(X_train, y_train, X_test)
+    # Split the data into training and validation sets
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Analyze epochs
+    train_accuracies, val_accuracies = analyze_epochs(X_train, y_train, X_val, y_val)
+
+    # Plot results
+    plot_epoch_performance(train_accuracies, val_accuracies)
+
+    # Print best epoch
+    best_epoch = val_accuracies.index(max(val_accuracies)) + 1
+    print(f"\nBest number of epochs: {best_epoch}")
+    print(f"Best validation accuracy: {max(val_accuracies) * 100:.2f}%")
